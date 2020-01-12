@@ -1317,59 +1317,6 @@ get_boot_splash() {
   fi
 }
 
-do_boot_splash() {
-  if [ ! -e /usr/share/plymouth/themes/pix/pix.script ]; then
-    if [ "$INTERACTIVE" = True ]; then
-      whiptail --msgbox "The splash screen is not installed so cannot be activated" 20 60 2
-    fi
-    return 1
-  fi
-  DEFAULT=--defaultno
-  if [ $(get_boot_splash) -eq 0 ]; then
-    DEFAULT=
-  fi
-  if [ "$INTERACTIVE" = True ]; then
-    whiptail --yesno "Would you like to show the splash screen at boot?" $DEFAULT 20 60 2
-    RET=$?
-  else
-    RET=$1
-  fi
-  if [ $RET -eq 0 ]; then
-    if is_pi ; then
-      if ! grep -q "splash" $CMDLINE ; then
-        sed -i $CMDLINE -e "s/$/ quiet splash plymouth.ignore-serial-consoles/"
-      fi
-    else
-      sed -i /etc/default/grub -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1 quiet splash plymouth.ignore-serial-consoles\"/"
-      sed -i /etc/default/grub -e "s/  \+/ /g"
-      sed -i /etc/default/grub -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\" /GRUB_CMDLINE_LINUX_DEFAULT=\"/"
-      update-grub
-    fi
-    STATUS=enabled
-  elif [ $RET -eq 1 ]; then
-    if is_pi ; then
-      if grep -q "splash" $CMDLINE ; then
-        sed -i $CMDLINE -e "s/ quiet//"
-        sed -i $CMDLINE -e "s/ splash//"
-        sed -i $CMDLINE -e "s/ plymouth.ignore-serial-consoles//"
-      fi
-    else
-      sed -i /etc/default/grub -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)quiet\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1\2\"/"
-      sed -i /etc/default/grub -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)splash\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1\2\"/"
-      sed -i /etc/default/grub -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)plymouth.ignore-serial-consoles\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1\2\"/"
-      sed -i /etc/default/grub -e "s/  \+/ /g"
-      sed -i /etc/default/grub -e "s/GRUB_CMDLINE_LINUX_DEFAULT=\" /GRUB_CMDLINE_LINUX_DEFAULT=\"/"
-      update-grub
-    fi
-    STATUS=disabled
-  else
-    return $RET
-  fi
-  if [ "$INTERACTIVE" = True ]; then
-    whiptail --msgbox "Splash screen at boot is $STATUS" 20 60 1
-  fi
-}
-
 get_rgpio() {
   if test -e /etc/systemd/system/pigpiod.service.d/public.conf; then
     echo 0
@@ -2324,14 +2271,13 @@ do_advanced_menu() {
 do_boot_menu() {
   if is_live ; then
     FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Boot Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
-      "B1 Desktop / CLI" "Choose whether to boot into a desktop environment or the command line" \
+      "B1 Desktop / CLI / Emulator" "Choose whether to boot into a desktop environment, the command line or an Emulator" \
       "B2 Wait for Network at Boot" "Choose whether to wait for network connection during boot" \
       3>&1 1>&2 2>&3)
   else
     FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Boot Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
-      "B1 Desktop / CLI" "Choose whether to boot into a desktop environment or the command line" \
+      "B1 Desktop / CLI / Emulator" "Choose whether to boot into a desktop environment, the command line or an Emulator" \
       "B2 Wait for Network at Boot" "Choose whether to wait for network connection during boot" \
-      "B3 Splash Screen" "Choose graphical splash screen or text boot" \
       3>&1 1>&2 2>&3)
   fi
   RET=$?
@@ -2341,7 +2287,6 @@ do_boot_menu() {
     case "$FUN" in
       B1\ *) do_boot_behaviour ;;
       B2\ *) do_boot_wait ;;
-      B3\ *) do_boot_splash ;;
       *) whiptail --msgbox "Guru Meditation: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   fi
