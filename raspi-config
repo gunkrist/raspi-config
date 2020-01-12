@@ -674,7 +674,10 @@ set_memory_split() {
 
 do_overclock() {
   if ! is_pione && ! is_pitwo; then
-    whiptail --msgbox "Only Pi 1 or Pi 2 can be overclocked with this tool." 20 60 2
+    whiptail --msgbox "Only Pi 1 or Pi 2 can be overclocked with this tool.
+    overclocking for other pi models has to be done manually.
+    All overclocking is done at users own responsability and may reduce
+    the lifetime of your raspberry pi." 20 60 2
     return 1
   fi
   if [ "$INTERACTIVE" = True ]; then
@@ -683,6 +686,7 @@ Be aware that overclocking may reduce the lifetime of your
 Raspberry Pi. If overclocking at a certain level causes
 system instability, try a more modest overclock. Hold down
 shift during boot to temporarily disable overclock.
+All overclocking is done at users own responsability
 See https://www.raspberrypi.org/documentation/configuration/config-txt/overclocking.md for more information.\
 " 20 70 1
    if is_pione; then
