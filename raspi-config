@@ -1596,9 +1596,53 @@ do_net_names () {
   fi
  }
 
-do_update() {
-  apt-get update &&
-  apt-get install raspi-config &&
+do_update_amiberry_master() {
+wget -q --spider http://google.com
+
+if [ $? -eq 0 ]; then
+	  cd /home/amibian/Amiga/Emulators/amiberry
+	   if [[ "$(git pull)" == "Already"* ]]; then
+	    whiptail --msgbox " Source files are up to date. $STATUS" 20 60 1
+	   else
+	    make clean
+	    make -j2 PLATFORM=rpi4
+	    whiptail --msgbox " Emulator updated to latest version. $status" 20 60 1
+	    cd ~
+	   fi
+else
+    whiptail --msgbox " Not connected to Internet. Please check your connection and try again." 20 60 1
+fi
+
+  ASK_TO_REBOOT=1
+}
+
+do_update_amiberry_dev() {
+wget -q --spider http://google.com
+
+if [ $? -eq 0 ]; then
+	  cd /home/amibian/Amiga/Emulators/amiberry-dev
+	   if [[ "$(git pull)" == "Already"* ]]; then
+	    whiptail --msgbox " Source files are up to date. $STATUS" 20 60 1
+	   else
+	    make clean
+	    make -j2 PLATFORM=rpi4
+	    whiptail --msgbox " Emulator updated to latest version. $status" 20 60 1
+	    cd ~
+	   fi
+else
+    whiptail --msgbox " Not connected to Internet. Please check your connection and try again." 20 60 1
+fi
+
+  ASK_TO_REBOOT=1
+}
+
+do_update_amibian() {
+  apt-get clean &&
+  apt-get -y update &&
+  apt-get -y upgrade &&
+  apt-get -y dist-upgrade &&
+  apt-get clean &&
+  apt-get -y autoremove &&
   printf "Sleeping 5 seconds before reloading raspi-config\n" &&
   sleep 5 &&
   exec raspi-config
@@ -2215,6 +2259,26 @@ do_volume() {
   alsamixer
 }
 
+do_update_menu() {
+  FUN=$(whiptail --title "System Settings (amibian-config)" --menu "Update Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+    "U1 Update Amibian" "Update Amibian system" \
+    "U2 Update Amiberry master Branch" "Update Amiberry from Github" \
+    "U3 Update Amiberry dev Branch" "Update Amiberry from Github" \
+    3>&1 1>&2 2>&3)
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    return 0
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      U1\ *) do_update_amibian ;;
+      U2\ *) do_update_amiberry_master ;;
+      U3\ *) do_update_amiberry_dev ;;
+      *) whiptail --msgbox "Guru Meditation: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  fi
+}
+
+
 do_internationalisation_menu() {
   FUN=$(whiptail --title "Amibian Configuration Tool" --menu "Localisation Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
     "I1 Change Locale" "Set up language and regional settings to match your location" \
@@ -2388,7 +2452,7 @@ if [ "$INTERACTIVE" = True ]; then
           5\ *) do_interface_menu ;;
           6\ *) do_overclock ;;
           7\ *) do_advanced_menu ;;
-          8\ *) do_update ;;
+          8\ *) do_update_menu ;;
           9\ *) do_about ;;
           *) whiptail --msgbox "Guru Meditation: unrecognized option" 20 60 1 ;;
         esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
@@ -2399,7 +2463,7 @@ if [ "$INTERACTIVE" = True ]; then
           3\ *) do_boot_menu ;;
           4\ *) do_internationalisation_menu ;;
           5\ *) do_ssh ;;
-          8\ *) do_update ;;
+          8\ *) do_update_menu ;;
           9\ *) do_about ;;
           *) whiptail --msgbox "Guru Meditation: unrecognized option" 20 60 1 ;;
         esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
