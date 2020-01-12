@@ -2038,6 +2038,10 @@ disable_bootro() {
   sed -i /etc/fstab -e "s/\(.*\/boot.*\)defaults,ro\(.*\)/\1defaults\2/"
 }
 
+do_config() {
+  sudo nano /boot/config.txt
+}
+
 do_overlayfs() {
   DEFAULT=--defaultno
   CURRENT=0
@@ -2183,8 +2187,36 @@ if [ -n "${OPT_MEMORY_SPLIT:-}" ]; then
   exit 0
 fi
 
+do_audio_menu() {
+  if is_live ; then
+    FUN=$(whiptail --title "Amibian Configuration Tool" --menu "Audio Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+      "A1 Audio output" "Force audio out through HDMI or 3.5mm jack" \
+      "A2 Audio volume control" "volume controls for Audio output" \
+      3>&1 1>&2 2>&3)
+  else
+    FUN=$(whiptail --title "Amibian Configuration Tool" --menu "Boot Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+      "A1 Audio output" "Force audio out through HDMI or 3.5mm jack" \
+      "A2 Volume control" "Change the volume for Audio output" \
+      3>&1 1>&2 2>&3)
+  fi
+  RET=$?
+  if [ $RET -eq 1 ]; then
+    return 0
+  elif [ $RET -eq 0 ]; then
+    case "$FUN" in
+      A1\ *) do_audio ;;
+      A2\ *) do_volume ;;
+      *) whiptail --msgbox "Guru Meditation: unrecognized option" 20 60 1 ;;
+    esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
+  fi
+}
+
+do_volume() {
+  alsamixer
+}
+
 do_internationalisation_menu() {
-  FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Localisation Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+  FUN=$(whiptail --title "Amibian Configuration Tool" --menu "Localisation Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
     "I1 Change Locale" "Set up language and regional settings to match your location" \
     "I2 Change Timezone" "Set up timezone to match your location" \
     "I3 Change Keyboard Layout" "Set the keyboard layout to match your keyboard" \
@@ -2234,11 +2266,11 @@ do_interface_menu() {
 }
 
 do_advanced_menu() {
-  FUN=$(whiptail --title "Raspberry Pi Software Configuration Tool (raspi-config)" --menu "Advanced Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+  FUN=$(whiptail --title "Amibian Configuration Tool" --menu "Advanced Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
     "A1 Expand Filesystem" "Ensures that all of the SD card storage is available to the OS" \
     "A2 Overscan" "You may need to configure overscan if black bars are present on display" \
     "A3 Memory Split" "Change the amount of memory made available to the GPU" \
-    "A4 Audio" "Force audio out through HDMI or 3.5mm jack" \
+    "A4 Audio" "Options for Audio output" \
     "A5 Resolution" "Set a specific screen resolution" \
     "A6 Screen Blanking" "Enable/Disable screen blanking" \
     "A7 Pixel Doubling" "Enable/Disable 2x2 pixel mapping" \
@@ -2246,6 +2278,7 @@ do_advanced_menu() {
     "A9 Compositor" "Enable/Disable xcompmgr composition manager" \
     "AA Pi 4 Video Output" "Video output options for Pi 4" \
     "AB Overlay FS" "Enable/Disable read-only file system" \
+    "AC Edit Config.txt" "Edit config.txt with nano text editor" \
     3>&1 1>&2 2>&3)
   RET=$?
   if [ $RET -eq 1 ]; then
@@ -2255,7 +2288,7 @@ do_advanced_menu() {
       A1\ *) do_expand_rootfs ;;
       A2\ *) do_overscan ;;
       A3\ *) do_memory_split ;;
-      A4\ *) do_audio ;;
+      A4\ *) do_audio_menu ;;
       A5\ *) do_resolution ;;
       A6\ *) do_blanking ;;
       A7\ *) do_pixdub ;;
@@ -2263,6 +2296,7 @@ do_advanced_menu() {
       A9\ *) do_xcompmgr ;;
       AA\ *) do_pi4video ;;
       AB\ *) do_overlayfs ;;
+      AC\ *) do_config ;;
       *) whiptail --msgbox "Guru Meditation: unrecognized option" 20 60 1 ;;
     esac || whiptail --msgbox "There was an error running option $FUN" 20 60 1
   fi
