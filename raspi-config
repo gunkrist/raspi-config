@@ -116,9 +116,11 @@ calc_wt_size() {
 do_about() {
   whiptail --msgbox "\
 This tool provides a straight-forward way of doing initial
-configuration of the Raspberry Pi. Although it can be run
+configuration of Amibian. Although it can be run
 at any time, some of the options may have difficulties if
-you have heavily customised your installation.\
+you have heavily customised your installation. It is Made from
+the orginal raspi-config from the official raspbian linux for 
+raspberry pi\
 " 20 70 1
 }
 
