@@ -8,6 +8,19 @@ ASK_TO_REBOOT=0
 BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
 CONFIG=/boot/config.txt
 
+export NEWT_COLORS='
+root=,white
+shadow=,white
+listbox=,white
+roottext=black,white
+window=,white
+border=,white
+actlistbox=red,white
+button=white,black
+actsellistbox=white,black
+title=black,white
+'
+
 is_pi () {
   ARCH=$(dpkg --print-architecture)
   if [ "$ARCH" = "armhf" ] ; then
