@@ -2334,7 +2334,7 @@ do_interface_menu() {
 }
 
 do_advanced_menu() {
-  FUN=$(whiptail --title "Amibian Configuration Tool" --menu "Advanced Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
+  FUN=$(whiptail --title "Amibian Configuration Tool" --backtitle "(cat /proc/device-tree/model)" --menu "Advanced Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Back --ok-button Select \
     "A1 Expand Filesystem" "Ensures that all of the SD card storage is available to the OS" \
     "A2 Overscan" "You may need to configure overscan if black bars are present on display" \
     "A3 Memory Split" "Change the amount of memory made available to the GPU" \
@@ -2421,7 +2421,7 @@ if [ "$INTERACTIVE" = True ]; then
   calc_wt_size
   while true; do
     if is_pi ; then
-      FUN=$(whiptail --title "Amibian Configuration Tool" --backtitle "$(cat /proc/device-tree/model)" --menu "Setup Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Finish --ok-button Select \
+      FUN=$(whiptail --title "Amibian Configuration Tool" --backtitle "(cat /proc/device-tree/model)" --menu "Setup Options" $WT_HEIGHT $WT_WIDTH $WT_MENU_HEIGHT --cancel-button Finish --ok-button Select \
         "1 Change User Password" "Change password for the current user" \
         "2 Network Options" "Configure network settings" \
         "3 Boot Options" "Configure options for start-up" \
